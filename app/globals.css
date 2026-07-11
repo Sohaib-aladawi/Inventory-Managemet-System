@@ -1,26 +1,220 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #1c2321;
+  --paper: #efebe1;
+  --paper-raised: #f7f4ec;
+  --steel: #4b5a60;
+  --amber: #c98a2c;
+  --rust: #b4462f;
+  --teal: #3e7c74;
+  --line: #d8d2c2;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-steel: var(--steel);
+  --color-amber: var(--amber);
+  --color-rust: var(--rust);
+  --color-teal: var(--teal);
+  --color-line: var(--line);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-barlow-condensed);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+}
+
+/* ---------- App header ---------- */
+
+.app-header {
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom: 3px solid var(--rust);
+}
+
+.app-header__mark {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-nav a {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--paper);
+  opacity: 0.7;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.app-nav a:hover {
+  opacity: 1;
+}
+
+.app-nav a[aria-current="page"] {
+  opacity: 1;
+  border-color: var(--rust);
+}
+
+/* ---------- Page heading ---------- */
+
+.page-title {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+/* ---------- Stat tag card ---------- */
+
+.stat-tag {
+  position: relative;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  padding: 1.5rem 1.25rem 1.25rem;
+}
+
+.stat-tag::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 2px solid var(--steel);
+}
+
+.stat-tag__label {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--steel);
+}
+
+.stat-tag__value {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.stat-tag--amber::before {
+  border-color: var(--amber);
+}
+.stat-tag--amber .stat-tag__value {
+  color: var(--amber);
+}
+
+.stat-tag--rust::before {
+  border-color: var(--rust);
+}
+.stat-tag--rust .stat-tag__value {
+  color: var(--rust);
+}
+
+.stat-tag--teal::before {
+  border-color: var(--teal);
+}
+.stat-tag--teal .stat-tag__value {
+  color: var(--teal);
+}
+
+/* ---------- Panel ---------- */
+
+.panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+}
+
+.panel__header {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  color: var(--steel);
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 1.25rem;
+}
+
+.panel__empty {
+  padding: 1.5rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--steel);
+}
+
+/* ---------- Manifest row (shortage list, fleet snapshot) ---------- */
+
+.manifest-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.875rem;
+}
+
+.manifest-row:last-child {
+  border-bottom: none;
+}
+
+.manifest-row--3col {
+  grid-template-columns: auto 1fr auto;
+}
+
+.manifest-row__flag {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.manifest-row__flag--critical {
+  background: var(--rust);
+}
+
+.manifest-row__flag--low {
+  background: var(--amber);
+}
+
+.manifest-row__flag--active {
+  background: var(--teal);
+}
+
+.manifest-row__primary {
+  font-weight: 600;
+}
+
+.manifest-row__secondary {
+  color: var(--steel);
+  font-family: var(--font-plex-sans), sans-serif;
+}
+
+.manifest-row__qty {
+  color: var(--rust);
+  font-weight: 600;
+}
+
+.manifest-row__meta {
+  color: var(--steel);
 }
