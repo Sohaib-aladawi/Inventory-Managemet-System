@@ -130,3 +130,8 @@ export const tripItems = pgTable("trip_items", {
     .defaultNow()
     .notNull(),
 });
+
+
+export type Items = typeof items.$inferSelect;
+export type Vehicles = typeof vehicles.$inferSelect;
+export type Trips = typeof trips.$inferSelect;
