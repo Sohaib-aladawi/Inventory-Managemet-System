@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { vehicles } from "@/db/schema";
-import { VehiclesExplorer } from "../components/VehiclesExplorer";
+import { VehiclesExplorer } from "./components/VehiclesExplorer";
 
 export default async function VehiclesPage() {
   const allVehicles = await db.select().from(vehicles);

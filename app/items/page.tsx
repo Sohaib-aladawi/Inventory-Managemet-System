@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { items } from "@/db/schema";
-import { ItemsExplorer } from "../components/ItemsExplorer";
+import { ItemsExplorer } from "./components/ItemsExplorer";
 
 export default async function ItemsPage() {
   const allItems = await db.select().from(items);
