@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { items } from "@/db/schema";
+import { itemUnitSchema, items } from "@/db/schema";
 import { handleApiError } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -14,7 +14,7 @@ const itemPatchSchema = z
   .object({
     sku: z.string().trim().min(1).max(100).optional(),
     name: z.string().trim().min(1).max(255).optional(),
-    unit: z.string().trim().min(1).max(50).optional(),
+    unit: itemUnitSchema.optional(),
     quantity: z.coerce.number().int().min(0).optional(),
     minimumStock: z.coerce.number().int().min(0).optional(),
   })

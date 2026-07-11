@@ -1,0 +1,1 @@
+CREATE TYPE "item_unit" AS ENUM('pcs', 'kg', 'liters', 'boxes', 'packs');

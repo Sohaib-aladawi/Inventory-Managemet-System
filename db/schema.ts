@@ -9,6 +9,16 @@ import {
 import { z } from "zod";
 
 
+export const itemUnitEnum = pgEnum("item_unit", [
+  "pcs",
+  "kg",
+  "liters",
+  "boxes",
+  "packs",
+]);
+
+export const itemUnitSchema = z.enum(["pcs", "kg", "liters", "boxes", "packs"]);
+
 //  Items Table
 export const items = pgTable("items", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -20,8 +30,9 @@ export const items = pgTable("items", {
   name: varchar("name", { length: 255 })
     .notNull(),
 
-  unit: varchar("unit", { length: 50 })
-    .notNull(),
+  unit: itemUnitEnum("unit")
+    .notNull()
+    .default("pcs"),
 
   quantity: integer("quantity")
     .notNull()
@@ -43,7 +54,7 @@ export const items = pgTable("items", {
 export const itemInsertSchema = z.object({
   sku: z.string().trim().min(1).max(100),
   name: z.string().trim().min(1).max(255),
-  unit: z.string().trim().min(1).max(50),
+  unit: itemUnitSchema.default("pcs"),
   quantity: z.coerce.number().int().min(0).default(0),
   minimumStock: z.coerce.number().int().min(0).default(0),
 });

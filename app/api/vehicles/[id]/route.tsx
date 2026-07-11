@@ -31,7 +31,12 @@ export async function GET(request: Request, { params }: RouteContext) {
     const [vehicle] = await db
       .select()
       .from(vehicles)
-      .where(eq(vehicles.id, id));  
+      .where(eq(vehicles.id, id));
+
+    if (!vehicle) {
+      return Response.json({ message: "Vehicle not found" }, { status: 404 });
+    }
+
     return Response.json(vehicle);
   } catch (error) {
     console.error("Error fetching vehicle:", error);
@@ -79,7 +84,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
-    const deletedVehicle = await db.delete(vehicles).where(eq(vehicles.id, id));
+    const [deletedVehicle] = await db
+      .delete(vehicles)
+      .where(eq(vehicles.id, id))
+      .returning();
 
     if (!deletedVehicle) {
       return Response.json({ message: "Vehicle not found" }, { status: 404 });
