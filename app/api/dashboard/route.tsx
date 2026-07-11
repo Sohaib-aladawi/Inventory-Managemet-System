@@ -11,12 +11,14 @@ export async function GET() {
 			db.select().from(trips).where(eq(trips.status, "ACTIVE")),
 			db.select().from(trips).where(eq(trips.status, "COMPLETED")),
 		]);
+		const lowStockItems = allItems.filter((item) => item.quantity <= item.minimumStock).length;
 
 		return Response.json({
-			itemsCount: allItems.length,
-			vehiclesCount: allVehicles.length,
-			activeTripsCount: activeTrips.length,
-			completedTripsCount: completedTrips.length,
+			totalItems: allItems.length,
+			totalVehicles: allVehicles.length,
+			activeTrips: activeTrips.length,
+			completedTrips: completedTrips.length,
+			lowStockItems,
 		});
 	} catch (error) {
 		console.error("Error fetching dashboard summary:", error);

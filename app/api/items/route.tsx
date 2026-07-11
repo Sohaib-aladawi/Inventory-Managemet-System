@@ -1,12 +1,22 @@
 import { db } from "@/db";
 import { itemInsertSchema, items } from "@/db/schema";
 import { handleApiError } from "@/lib/utils";
+import { ilike } from "drizzle-orm";
 
 const newItemBodySchema = itemInsertSchema;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const itemsData = await db.select().from(items);
+    const url = new URL(request.url);
+    const sku = url.searchParams.get("sku")?.trim();
+    const search = url.searchParams.get("search")?.trim();
+
+    const itemsData = sku
+      ? await db.select().from(items).where(ilike(items.sku, sku))
+      : search
+        ? await db.select().from(items).where(ilike(items.sku, `%${search}%`))
+        : await db.select().from(items);
+
     return Response.json(itemsData);
   } catch (error) {
     console.error("Error fetching items:", error);

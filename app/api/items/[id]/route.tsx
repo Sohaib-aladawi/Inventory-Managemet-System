@@ -105,6 +105,13 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
     return Response.json({ message: "Item deleted successfully" });
   } catch (error) {
+    if (error instanceof Error && "code" in error && (error as { code?: string }).code === "23503") {
+      return Response.json(
+        { message: "Cannot delete item used in previous trips." },
+        { status: 409 },
+      );
+    }
+
     console.error("Error deleting item:", error);
     return handleApiError(error, "Error deleting item");
   }

@@ -7,7 +7,7 @@ import {
 	vehicles,
 } from "@/db/schema";
 import { handleApiError } from "@/lib/utils";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 export async function POST(request: Request) {
 	let body: unknown;
@@ -35,15 +35,43 @@ export async function POST(request: Request) {
 			return Response.json({ message: "Vehicle not found" }, { status: 404 });
 		}
 
+		const [activeTrip] = await db
+			.select({ id: trips.id })
+			.from(trips)
+			.where(
+				and(eq(trips.vehicleId, parsedBody.data.vehicleId), eq(trips.status, "ACTIVE")),
+			)
+			.limit(1);
+
+		if (activeTrip) {
+			return Response.json(
+				{ message: "Vehicle already has an active trip." },
+				{ status: 409 },
+			);
+		}
+
 		if (parsedBody.data.items.length > 0) {
 			const itemIds = parsedBody.data.items.map((item) => item.itemId);
-			const existingItems = await db
-				.select({ id: items.id })
+			const requestedItems = await db
+				.select({ id: items.id, quantity: items.quantity })
 				.from(items)
 				.where(inArray(items.id, itemIds));
 
-			if (existingItems.length !== itemIds.length) {
+			if (requestedItems.length !== itemIds.length) {
 				return Response.json({ message: "One or more items not found" }, { status: 404 });
+			}
+
+			const stockByItemId = new Map(requestedItems.map((item) => [item.id, item.quantity]));
+
+			for (const requestedItem of parsedBody.data.items) {
+				const availableQuantity = stockByItemId.get(requestedItem.itemId);
+
+				if (availableQuantity === undefined || availableQuantity < requestedItem.quantityTaken) {
+					return Response.json(
+						{ message: "Stock is not available for one or more items." },
+						{ status: 400 },
+					);
+				}
 			}
 		}
 
@@ -66,6 +94,21 @@ export async function POST(request: Request) {
 						quantityTaken: item.quantityTaken,
 					})),
 				);
+
+				for (const item of parsedBody.data.items) {
+					const [updatedItem] = await tx
+						.update(items)
+						.set({
+							quantity: sql`${items.quantity} - ${item.quantityTaken}`,
+							updatedAt: new Date(),
+						})
+						.where(and(eq(items.id, item.itemId), gte(items.quantity, item.quantityTaken)))
+						.returning({ id: items.id });
+
+					if (!updatedItem) {
+						throw new Error("Stock is not available for one or more items.");
+					}
+				}
 			}
 
 			return trip;

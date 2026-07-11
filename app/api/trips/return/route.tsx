@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { handleApiError } from "@/lib/utils";
-import { tripItems, tripReturnSchema, trips } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { items, tripItems, tripReturnSchema, trips } from "@/db/schema";
+import { and, eq, sql } from "drizzle-orm";
 
 export async function POST(request: Request) {
 	let body: unknown;
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 		}
 
 		if (trip[0].status === "COMPLETED") {
-			return Response.json({ message: "Trip is already completed" }, { status: 400 });
+			return Response.json({ message: "Trip is already completed" }, { status: 409 });
 		}
 
 		const tripItemRows = await db
@@ -43,9 +43,11 @@ export async function POST(request: Request) {
 				return Response.json({ message: "Trip item not found" }, { status: 404 });
 			}
 
-			if (returnedItem.quantityReturned > tripItem.quantityTaken) {
+			const remainingQuantity = tripItem.quantityTaken - tripItem.quantityReturned;
+
+			if (returnedItem.quantityReturned > remainingQuantity) {
 				return Response.json(
-					{ message: "Returned quantity cannot exceed quantity taken" },
+					{ message: "Returned quantity cannot exceed remaining quantity." },
 					{ status: 400 },
 				);
 			}
@@ -53,10 +55,18 @@ export async function POST(request: Request) {
 
 		await db.transaction(async (tx) => {
 			for (const returnedItem of parsedBody.data.items) {
+				const tripItem = tripItemByItemId.get(returnedItem.itemId);
+
+				if (!tripItem) {
+					throw new Error("Trip item not found");
+				}
+
+				const nextReturnedQuantity = tripItem.quantityReturned + returnedItem.quantityReturned;
+
 				await tx
 					.update(tripItems)
 					.set({
-						quantityReturned: returnedItem.quantityReturned,
+						quantityReturned: nextReturnedQuantity,
 					})
 					.where(
 						and(
@@ -64,6 +74,14 @@ export async function POST(request: Request) {
 							eq(tripItems.itemId, returnedItem.itemId),
 						),
 					);
+
+				await tx
+					.update(items)
+					.set({
+						quantity: sql`${items.quantity} + ${returnedItem.quantityReturned}`,
+						updatedAt: new Date(),
+					})
+					.where(eq(items.id, returnedItem.itemId));
 			}
 
 			await tx

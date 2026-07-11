@@ -95,6 +95,13 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
     return Response.json({ message: "Vehicle deleted successfully" });
   } catch (error) {
+    if (error instanceof Error && "code" in error && (error as { code?: string }).code === "23503") {
+      return Response.json(
+        { message: "Cannot delete vehicle with active or historical trips." },
+        { status: 409 },
+      );
+    }
+
     console.error("Error deleting vehicle:", error);
     return handleApiError(error, "Error deleting vehicle");
   }

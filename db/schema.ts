@@ -150,7 +150,12 @@ export const tripStartSchema = z.object({
   jobReference: z.string().trim().max(255).optional(),
   notes: z.string().trim().max(1000).optional(),
   items: z.array(tripStartItemSchema).default([]),
-});
+}).refine(
+  (data) => new Set(data.items.map((item) => item.itemId)).size === data.items.length,
+  {
+    message: "Duplicate items are not allowed in a trip start request",
+  },
+);
 
 export const tripReturnItemSchema = z.object({
   itemId: z.string().uuid(),
@@ -161,7 +166,12 @@ export const tripReturnSchema = z.object({
   tripId: z.string().uuid(),
   returnedAt: z.coerce.date().optional(),
   items: z.array(tripReturnItemSchema).min(1),
-});
+}).refine(
+  (data) => new Set(data.items.map((item) => item.itemId)).size === data.items.length,
+  {
+    message: "Duplicate items are not allowed in a trip return request",
+  },
+);
 
 // Trip Items table
 export const tripItems = pgTable("trip_items", {
