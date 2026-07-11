@@ -6,6 +6,7 @@ import {
   timestamp,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { z } from "zod";
 
 
 //  Items Table
@@ -39,6 +40,14 @@ export const items = pgTable("items", {
     .notNull(),
 });
 
+export const itemInsertSchema = z.object({
+  sku: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(255),
+  unit: z.string().trim().min(1).max(50),
+  quantity: z.coerce.number().int().min(0).default(0),
+  minimumStock: z.coerce.number().int().min(1).default(0),
+});
+
 
 // Vehicals Table
 export const vehicles = pgTable("vehicles", {
@@ -63,12 +72,20 @@ export const vehicles = pgTable("vehicles", {
     .notNull(),
 });
 
+export const vehicleInsertSchema = z.object({
+  registration: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(255),
+  type: z.string().trim().min(1).max(100),
+});
+
 // Trips Table
 
 export const tripStatusEnum = pgEnum("trip_status", [
   "ACTIVE",
   "COMPLETED",
 ]);
+
+export const tripStatusSchema = z.enum(["ACTIVE", "COMPLETED"]);
 
 export const trips = pgTable("trips", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -103,6 +120,15 @@ export const trips = pgTable("trips", {
     .notNull(),
 });
 
+export const tripInsertSchema = z.object({
+  vehicleId: z.string().uuid(),
+  status: tripStatusSchema.default("ACTIVE"),
+  departedAt: z.coerce.date().default(() => new Date()),
+  returnedAt: z.coerce.date().optional(),
+  jobReference: z.string().trim().max(255).optional(),
+  notes: z.string().trim().max(1000).optional(),
+});
+
 // Trip Items table
 export const tripItems = pgTable("trip_items", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -131,7 +157,15 @@ export const tripItems = pgTable("trip_items", {
     .notNull(),
 });
 
+export const tripItemInsertSchema = z.object({
+  tripId: z.string().uuid(),
+  itemId: z.string().uuid(),
+  quantityTaken: z.coerce.number().int().min(1),
+  quantityReturned: z.coerce.number().int().min(0).default(0),
+});
+
 
 export type Items = typeof items.$inferSelect;
 export type Vehicles = typeof vehicles.$inferSelect;
 export type Trips = typeof trips.$inferSelect;
+export type TripItems = typeof tripItems.$inferSelect;
