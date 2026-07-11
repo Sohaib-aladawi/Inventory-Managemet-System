@@ -140,6 +140,29 @@ export const tripInsertSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
 });
 
+export const tripStartItemSchema = z.object({
+  itemId: z.string().uuid(),
+  quantityTaken: z.coerce.number().int().min(1),
+});
+
+export const tripStartSchema = z.object({
+  vehicleId: z.string().uuid(),
+  jobReference: z.string().trim().max(255).optional(),
+  notes: z.string().trim().max(1000).optional(),
+  items: z.array(tripStartItemSchema).default([]),
+});
+
+export const tripReturnItemSchema = z.object({
+  itemId: z.string().uuid(),
+  quantityReturned: z.coerce.number().int().min(0),
+});
+
+export const tripReturnSchema = z.object({
+  tripId: z.string().uuid(),
+  returnedAt: z.coerce.date().optional(),
+  items: z.array(tripReturnItemSchema).min(1),
+});
+
 // Trip Items table
 export const tripItems = pgTable("trip_items", {
   id: uuid("id").defaultRandom().primaryKey(),
