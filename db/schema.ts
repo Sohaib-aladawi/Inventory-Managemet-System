@@ -45,7 +45,7 @@ export const itemInsertSchema = z.object({
   name: z.string().trim().min(1).max(255),
   unit: z.string().trim().min(1).max(50),
   quantity: z.coerce.number().int().min(0).default(0),
-  minimumStock: z.coerce.number().int().min(1).default(0),
+  minimumStock: z.coerce.number().int().min(0).default(0),
 });
 
 

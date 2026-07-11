@@ -1,90 +1,111 @@
 import { db } from "@/db";
 import { items } from "@/db/schema";
+import { handleApiError } from "@/lib/utils";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-type ItemBody = {
-  sku?: string;
-  name?: string;
-  unit?: string;
-  quantity?: number;
-  minimumStock?: number;
-};
 
-//   const resolved = await params         // unwrap the Promise
-//   console.log('params', resolved)       // e.g. { id: 'CAB001' }
-//   const { id } = resolved
-//   return Response.json({ id })
-// }// export async function GET(request: Request, { params }: { params: any }) {
+
+const itemPatchSchema = z
+  .object({
+    sku: z.string().trim().min(1).max(100).optional(),
+    name: z.string().trim().min(1).max(255).optional(),
+    unit: z.string().trim().min(1).max(50).optional(),
+    quantity: z.coerce.number().int().min(0).optional(),
+    minimumStock: z.coerce.number().int().min(0).optional(),
+  })
+  .refine(
+    (data) =>
+      data.sku !== undefined ||
+      data.name !== undefined ||
+      data.unit !== undefined ||
+      data.quantity !== undefined ||
+      data.minimumStock !== undefined,
+    {
+      message: "No valid fields to update",
+    },
+  );
+
 // ========GET API ========
 export async function GET(request: Request, { params }: RouteContext) {
-  const { id } = await params
-  const [item] = await db
-    .select()
-    .from(items)
-    .where(eq(items.sku, id))
-    .limit(1);
+  try {
+    const { id } = await params;
+    const [item] = await db
+      .select()
+      .from(items)
+      .where(eq(items.sku, id))
+      .limit(1);
 
-  if (!item) {
-    return Response.json({ message: "Item not found" }, { status: 404 });
+    if (!item) {
+      return Response.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    return Response.json(item);
+  } catch (error) {
+    console.error("Error fetching item:", error);
+    return handleApiError(error, "Error fetching item");
   }
-
-  return Response.json(item);
 }
 
 // ========PATCH API ========
 export async function PATCH(request: Request, { params }: RouteContext) {
-  let body: ItemBody;
+  let body: unknown;
 
   try {
-    body = (await request.json()) as ItemBody;
+    body = await request.json();
   } catch {
     return Response.json({ message: "Invalid JSON body" }, { status: 400 });
   }
 
-  const updates: Partial<ItemBody> & { updatedAt: Date } = {
-    updatedAt: new Date(),
-  };
+  const parsedBody = itemPatchSchema.safeParse(body);
 
-  if (typeof body.sku === "string") updates.sku = body.sku;
-  if (typeof body.name === "string") updates.name = body.name;
-  if (typeof body.unit === "string") updates.unit = body.unit;
-  if (typeof body.quantity === "number") updates.quantity = body.quantity;
-  if (typeof body.minimumStock === "number")
-    updates.minimumStock = body.minimumStock;
-
-  if (Object.keys(updates).length === 1) {
-    return Response.json(
-      { message: "No valid fields to update" },
-      { status: 400 },
-    );
-  }
-  const { id } = await params;
-  const [updatedItem] = await db
-    .update(items)
-    .set(updates)
-    .where(eq(items.sku, id))
-    .returning();
-
-  if (!updatedItem) {
-    return Response.json({ message: "Item not found" }, { status: 404 });
+  if (!parsedBody.success) {
+    return handleApiError(parsedBody.error, "Invalid item update payload");
   }
 
-  return Response.json(updatedItem);
+  try {
+    const { id } = await params;
+    const [updatedItem] = await db
+      .update(items)
+      .set({
+        ...parsedBody.data,
+        updatedAt: new Date(),
+      })
+      .where(eq(items.sku, id))
+      .returning();
+
+    if (!updatedItem) {
+      return Response.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    return Response.json(updatedItem);
+  } catch (error) {
+    console.error("Error updating item:", error);
+    return handleApiError(error, "Error updating item");
+  }
 }
 
 
 // ========DELETE API ========
 export async function DELETE(request: Request, { params }: RouteContext) {
-  const { id } = await params;
-  const [deletedItem] = await db.delete(items).where(eq(items.sku, id)).returning();
+  try {
+    const { id } = await params;
+    const [deletedItem] = await db
+      .delete(items)
+      .where(eq(items.sku, id))
+      .returning();
 
-  if (!deletedItem) {
-    return Response.json({ message: "Item not found" }, { status: 404 });
+    if (!deletedItem) {
+      return Response.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    return Response.json({ message: "Item deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting item:", error);
+    return handleApiError(error, "Error deleting item");
   }
-
-  return Response.json({ message: "Item deleted successfully" });
 }

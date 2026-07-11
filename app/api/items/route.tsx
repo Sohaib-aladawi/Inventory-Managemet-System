@@ -1,13 +1,8 @@
 import { db } from "@/db";
-import { items } from "@/db/schema";
+import { itemInsertSchema, items } from "@/db/schema";
+import { handleApiError } from "@/lib/utils";
 
-type NewItemBody = {
-  sku: string;
-  name: string;
-  unit: string;
-  quantity?: number;
-  minimumStock?: number;
-};
+const newItemBodySchema = itemInsertSchema;
 
 export async function GET() {
   try {
@@ -15,41 +10,36 @@ export async function GET() {
     return Response.json(itemsData);
   } catch (error) {
     console.error("Error fetching items:", error);
-    return Response.json({ message: "Error fetching items" }, { status: 500 });
+    return handleApiError(error, "Error fetching items");
   }
 }
 
 export async function POST(request: Request) {
-  let body: NewItemBody;
+  let body: unknown;
 
   try {
-    body = (await request.json()) as NewItemBody;
+    body = await request.json();
   } catch {
     return Response.json({ message: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!body.sku || !body.name || !body.unit) {
-    return Response.json(
-      { message: "sku, name, and unit are required" },
-      { status: 400 },
-    );
+  const parsedBody = newItemBodySchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return handleApiError(parsedBody.error, "Invalid item payload");
   }
 
   try {
     const [insertedItem] = await db
       .insert(items)
       .values({
-        sku: body.sku,
-        name: body.name,
-        unit: body.unit,
-        quantity: body.quantity ?? 0,
-        minimumStock: body.minimumStock ?? 0,
+        ...parsedBody.data,
       })
       .returning();
 
     return Response.json(insertedItem, { status: 201 });
   } catch (error) {
     console.error("Error creating item:", error);
-    return Response.json({ message: "Error creating item" }, { status: 500 });
+    return handleApiError(error, "Error creating item");
   }
 }
