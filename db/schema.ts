@@ -117,7 +117,7 @@ export const trips = pgTable("trips", {
 
   returnedAt: timestamp("returned_at"),
 
-  // Bonus feature
+  
   jobReference: varchar("job_reference", {
     length: 255,
   }),
