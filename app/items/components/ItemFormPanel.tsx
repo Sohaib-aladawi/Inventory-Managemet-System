@@ -5,12 +5,12 @@ import { useState } from "react";
 export type ItemRecord = {
   sku: string;
   name: string;
-  unit: "pcs" | "kg" | "liters" | "boxes" | "packs";
+  unit: "pcs" | "kg" | "liters" | "boxes" | "packs" | "piers" | "rolls";
   quantity: number;
   minimumStock: number;
 };
 
-const UNIT_OPTIONS = ["pcs", "kg", "liters", "boxes", "packs"] as const;
+const UNIT_OPTIONS = ["pcs", "kg", "liters", "boxes", "packs", "piers", "rolls"] as const;
 
 type ItemFormPanelProps = {
   mode: "create" | "edit";
