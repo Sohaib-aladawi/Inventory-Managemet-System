@@ -15,9 +15,11 @@ export const itemUnitEnum = pgEnum("item_unit", [
   "liters",
   "boxes",
   "packs",
+  "piers",
+  "rolls"
 ]);
 
-export const itemUnitSchema = z.enum(["pcs", "kg", "liters", "boxes", "packs"]);
+export const itemUnitSchema = z.enum(["pcs", "kg", "liters", "boxes", "packs", "piers","rolls"]);
 
 //  Items Table
 export const items = pgTable("items", {

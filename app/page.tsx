@@ -9,8 +9,7 @@ export default async function DashboardPage() {
   const [allItems, allVehicles, activeTripRows] = await Promise.all([
     db.select().from(items),
     db.select().from(vehicles),
-    db
-      .select({
+    db.select({
         id: trips.id,
         jobReference: trips.jobReference,
         vehicleRegistration: vehicles.registration,
@@ -24,9 +23,7 @@ export default async function DashboardPage() {
 
   const lowStockItems = allItems
     .filter((item) => item.quantity <= item.minimumStock)
-    .sort(
-      (a, b) => a.quantity - a.minimumStock - (b.quantity - b.minimumStock),
-    )
+    .sort((a, b) => a.quantity - a.minimumStock - (b.quantity - b.minimumStock))
     .map((item) => ({
       sku: item.sku,
       name: item.name,
@@ -47,7 +44,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatTag label="Items tracked" value={allItems.length} />
         <StatTag label="Vehicles" value={allVehicles.length} />
-        <StatTag label="Active trips" value={activeTripRows.length} tone="teal" />
+        <StatTag
+          label="Active trips"
+          value={activeTripRows.length}
+          tone="teal"
+        />
         <StatTag
           label="Low stock"
           value={lowStockItems.length}
