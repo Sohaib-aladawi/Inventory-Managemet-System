@@ -45,7 +45,6 @@ The system allows crews to take items from stock, record what is returned after 
 * React
 * TypeScript
 * Tailwind CSS
-* shadcn/ui
 
 ### Backend
 
@@ -123,10 +122,6 @@ The project includes seed data containing:
 
 * 20 inventory items
 * 6 vehicles
-* 3 trips
-
-  * 2 completed trips
-  * 1 active trip
 
 Run:
 
