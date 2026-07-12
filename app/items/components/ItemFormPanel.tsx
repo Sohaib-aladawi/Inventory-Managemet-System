@@ -123,6 +123,7 @@ export function ItemFormPanel({ mode, initialItem, onClose, onSaved }: ItemFormP
               id="quantity"
               type="number"
               min={0}
+              max={999999}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               required
@@ -135,6 +136,7 @@ export function ItemFormPanel({ mode, initialItem, onClose, onSaved }: ItemFormP
               id="minimumStock"
               type="number"
               min={0}
+              max={999999}
               value={minimumStock}
               onChange={(e) => setMinimumStock(e.target.value)}
               required
