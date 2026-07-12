@@ -66,46 +66,44 @@ export async function POST(request: Request) {
       }
     }
 
-    await db.transaction(async (tx) => {
-      for (const returnedItem of parsedBody.data.items) {
-        const tripItem = tripItemByItemId.get(returnedItem.itemId);
+    for (const returnedItem of parsedBody.data.items) {
+      const tripItem = tripItemByItemId.get(returnedItem.itemId);
 
-        if (!tripItem) {
-          throw new Error("Trip item not found");
-        }
-
-        const nextReturnedQuantity =
-          tripItem.quantityReturned + returnedItem.quantityReturned;
-
-        await tx
-          .update(tripItems)
-          .set({
-            quantityReturned: nextReturnedQuantity,
-          })
-          .where(
-            and(
-              eq(tripItems.tripId, parsedBody.data.tripId),
-              eq(tripItems.itemId, returnedItem.itemId),
-            ),
-          );
-
-        await tx
-          .update(items)
-          .set({
-            quantity: sql`${items.quantity} + ${returnedItem.quantityReturned}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(items.id, returnedItem.itemId));
+      if (!tripItem) {
+        throw new Error("Trip item not found");
       }
 
-      await tx
-        .update(trips)
+      const nextReturnedQuantity =
+        tripItem.quantityReturned + returnedItem.quantityReturned;
+
+      await db
+        .update(tripItems)
         .set({
-          status: "COMPLETED",
-          returnedAt: parsedBody.data.returnedAt ?? new Date(),
+          quantityReturned: nextReturnedQuantity,
         })
-        .where(eq(trips.id, parsedBody.data.tripId));
-    });
+        .where(
+          and(
+            eq(tripItems.tripId, parsedBody.data.tripId),
+            eq(tripItems.itemId, returnedItem.itemId),
+          ),
+        );
+
+      await db
+        .update(items)
+        .set({
+          quantity: sql`${items.quantity} + ${returnedItem.quantityReturned}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(items.id, returnedItem.itemId));
+    }
+
+    await db
+      .update(trips)
+      .set({
+        status: "COMPLETED",
+        returnedAt: parsedBody.data.returnedAt ?? new Date(),
+      })
+      .where(eq(trips.id, parsedBody.data.tripId));
 
     const [completedTrip] = await db
       .select()
