@@ -498,3 +498,33 @@ body {
   font-size: 1rem;
   margin-top: 0.25rem;
 }
+
+/* ---------- Skeleton loading state ---------- */
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton {
+  background: var(--line);
+  border-radius: 2px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-row {
+  display: grid;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
