@@ -1,7 +1,8 @@
-import { db } from "./index";
-import { items, vehicles } from "./schema";
+import "dotenv/config";
+import { db } from "@/db";
+import { items, vehicles,tripItems, trips } from "@/db/schema";
 
-type Unit = "pcs" | "packs" | "kg" | "liters" | "boxes";
+type Unit = "pcs" | "packs" | "kg" | "liters" | "boxes" | "piers" | "rolls";
 
 const itemData: {
   sku: string;
@@ -73,6 +74,8 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   // Clear old data
+  await db.delete(tripItems);
+  await db.delete(trips);
   await db.delete(items);
   await db.delete(vehicles);
 
